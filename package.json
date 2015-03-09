@@ -3,7 +3,6 @@
   "version": "0.0.5",
   "description": "Totem core service functionality with default behaviors. All services should inherit from this service",
   "main": "./src/service.js",
-  "private":true,
   "scripts": {
     "pretest": "rm -rf coverage",
     "test": "istanbul cover _mocha -- --recursive -R spec",
@@ -11,19 +10,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/totemlabs/totem-api.git"
+    "url": "https://github.com/matthewaveryusa/totem-service.git"
   },
-  "publishConfig": { "registry": "http://totemdev:5010/" },
   "author": "Matthew Avery & Zenon Parker",
   "license": "Private, Totem Labs LLC all rights reserved.",
   "bugs": {
-    "url": "https://github.com/totemlabs/totem-api/issues"
+    "url": "https://github.com/matthewaveryusa/totem-service/issues"
   },
-  "homepage": "https://github.com/totemlabs/totem-api",
+  "homepage": "https://github.com/matthewaveryusa/totem-service",
   "dependencies" : {
     "lodash":"*",
     "express":"*",
-    "tracer":"*"
+    "tracer":"*",
     "totem-tools":"*"
   },
   "devDependencies": {
