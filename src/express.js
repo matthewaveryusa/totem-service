@@ -35,7 +35,7 @@ class ExpressRoutes {
    * //sample response:
    */
 
-  routeDetailsfunction () {
+  routeDetails() {
     return this.description;
   }
 
