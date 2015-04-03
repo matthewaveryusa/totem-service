@@ -1,6 +1,6 @@
 {
   "name": "totem-service",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Totem core service functionality with default behaviors. All services should inherit from this service",
   "main": "./src/service.js",
   "scripts": {
@@ -12,19 +12,43 @@
     "type": "git",
     "url": "https://github.com/matthewaveryusa/totem-service.git"
   },
-  "author": "Matthew Avery & Zenon Parker",
+  "author": {
+    "name": "Matthew Avery & Zenon Parker"
+  },
   "license": "Private, Totem Labs LLC all rights reserved.",
   "bugs": {
     "url": "https://github.com/matthewaveryusa/totem-service/issues"
   },
   "homepage": "https://github.com/matthewaveryusa/totem-service",
-  "dependencies" : {
-    "lodash":"*",
-    "express":"*",
-    "tracer":"*",
-    "totem-tools":"*"
+  "dependencies": {
+    "express": "^5.0.0-alpha.1",
+    "lodash": "*",
+    "totem-tools": "*",
+    "tracer": "*"
   },
   "devDependencies": {
-    "should":"*"
-  }
+    "should": "*"
+  },
+  "gitHead": "e89fdd9196d48b790f937c088758c988859f4080",
+  "_id": "totem-service@0.0.5",
+  "_shasum": "ec581a01791780a42af028fb565e616601ab424a",
+  "_from": "totem-service@*",
+  "_npmVersion": "1.4.21",
+  "_npmUser": {
+    "name": "matthewaveryusa",
+    "email": "matthewaveryusa@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "matthewaveryusa",
+      "email": "matthewaveryusa@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "ec581a01791780a42af028fb565e616601ab424a",
+    "tarball": "http://registry.npmjs.org/totem-service/-/totem-service-0.0.5.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/totem-service/-/totem-service-0.0.5.tgz",
+  "readme": "ERROR: No README data found!"
 }
