@@ -4,7 +4,7 @@ const _ = require('lodash'),
   ExpressRoutes = require('./express.js').ExpressRoutes,
   express = require('express'),
   http = require('http'),
-  log = require('tracer').console();
+  log = require('totem-log');
 
 /**
  * @module libs/service
@@ -25,13 +25,13 @@ class Service {
 
 
   connect() {
-    log.info('starting server');
+    log.info('starting server','__LOCATION__');
     var app = this.expressApp();
     this.server = http.createServer(app);
     this.setupServerEvents();
     this.setupRoutes(app);
     this.server.on('error', function httpServerError(err) {
-      log.error(err);
+      log.error(err,'__LOCATION__');
       process.exit(1);
     });
     if (this.options.host === '*') {
@@ -52,7 +52,7 @@ class Service {
     try {
       this.server.close(callback);
     } catch (e) {
-      log.error('disconnect throw', e);
+      log.error(e,'__LOCATION__');
     }
     _.forEach(this.serverConnections, function closeConnection(connection) {
       connection.destroy();
@@ -77,12 +77,12 @@ class Service {
 
   setupRoutes(app) {
     app.use('/', function ApiRequestRoute(req, res, next) {
-      log.info('API request', req.path, JSON.stringify(req.body));
+      log.info({path: req.path, body: JSON.stringify(req.body)},'__LOCATION__');
       next();
     });
 
     app.use(function NotFoundRoute(req, res) {
-      log.info(404, req.path);
+      log.info({code: 404, path: req.path, body: JSON.stringify(req.body)},'__LOCATION__');
       res.status(404);
       res.json({'message': 'not found'});
     });
@@ -107,15 +107,6 @@ class Service {
 
     app.use('/_/', adminRoute);
     return app;
-  }
-
-  defaultCallback(err, data) {
-    if (err) {
-      log.error(err, data);
-      process.exit(1);
-      return;
-    }
-    this.connect();
   }
 
   end() {

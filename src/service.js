@@ -8,7 +8,7 @@ var _ = require('lodash'),
     ExpressRoutes = require('./express.js').ExpressRoutes,
     express = require('express'),
     http = require('http'),
-    log = require('tracer').console();
+    log = require('totem-log');
 
 /**
  * @module libs/service
@@ -31,13 +31,13 @@ var Service = (function () {
   _createClass(Service, [{
     key: 'connect',
     value: function connect() {
-      log.info('starting server');
+      log.info('starting server', './service.js:34');
       var app = this.expressApp();
       this.server = http.createServer(app);
       this.setupServerEvents();
       this.setupRoutes(app);
       this.server.on('error', function httpServerError(err) {
-        log.error(err);
+        log.error(err, './service.js:40');
         process.exit(1);
       });
       if (this.options.host === '*') {
@@ -60,7 +60,7 @@ var Service = (function () {
       try {
         this.server.close(callback);
       } catch (e) {
-        log.error('disconnect throw', e);
+        log.error(e, './service.js:63');
       }
       _.forEach(this.serverConnections, function closeConnection(connection) {
         connection.destroy();
@@ -87,12 +87,12 @@ var Service = (function () {
     key: 'setupRoutes',
     value: function setupRoutes(app) {
       app.use('/', function ApiRequestRoute(req, res, next) {
-        log.info('API request', req.path, JSON.stringify(req.body));
+        log.info({ path: req.path, body: JSON.stringify(req.body) }, './service.js:90');
         next();
       });
 
       app.use(function NotFoundRoute(req, res) {
-        log.info(404, req.path);
+        log.info({ code: 404, path: req.path, body: JSON.stringify(req.body) }, './service.js:95');
         res.status(404);
         res.json({ message: 'not found' });
       });
@@ -120,16 +120,6 @@ var Service = (function () {
       return app;
     }
   }, {
-    key: 'defaultCallback',
-    value: function defaultCallback(err, data) {
-      if (err) {
-        log.error(err, data);
-        process.exit(1);
-        return;
-      }
-      this.connect();
-    }
-  }, {
     key: 'end',
     value: function end() {
       this.disconnect();
@@ -140,4 +130,3 @@ var Service = (function () {
 })();
 
 exports.Service = Service;
-
