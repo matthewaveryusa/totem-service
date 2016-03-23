@@ -1,132 +1,116 @@
 'use strict';
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _ = require('lodash'),
-    ExpressRoutes = require('./express.js').ExpressRoutes,
-    express = require('express'),
-    http = require('http'),
-    log = require('totem-log');
+const _ = require('lodash'),
+  ExpressRoutes = require('./express.js').ExpressRoutes,
+  express = require('express'),
+  http = require('http'),
+  log = require('totem-log');
 
 /**
  * @module libs/service
  */
 
-var Service = (function () {
-  function Service(options) {
-    _classCallCheck(this, Service);
-
+class Service {
+  constructor(options) {
     var self = this;
     this.options = options;
     process.on('SIGTERM', function sigtermEvent() {
       self.end();
       setTimeout(function sigtermTimeout() {
-        process.exit(0);
-      }, self.sigtermTimeout || 0);
+          process.exit(0);
+        },
+        self.sigtermTimeout || 0);
     });
   }
 
-  _createClass(Service, [{
-    key: 'connect',
-    value: function connect() {
-      log.info('starting server', './service.js:34');
-      var app = this.expressApp();
-      this.server = http.createServer(app);
-      this.setupServerEvents();
-      this.setupRoutes(app);
-      this.server.on('error', function httpServerError(err) {
-        log.error(err, './service.js:40');
-        process.exit(1);
-      });
-      if (this.options.host === '*') {
-        this.server.listen(this.options.port);
-      } else {
-        this.server.listen(this.options.port, this.options.host);
-      }
-    }
-  }, {
-    key: 'reconnect',
-    value: function reconnect() {
-      var self = this;
-      this.disconnect(function reconnectCallback() {
-        self.connect();
-      });
-    }
-  }, {
-    key: 'disconnect',
-    value: function disconnect(callback) {
-      try {
-        this.server.close(callback);
-      } catch (e) {
-        log.error(e, './service.js:63');
-      }
-      _.forEach(this.serverConnections, function closeConnection(connection) {
-        connection.destroy();
-      });
-    }
-  }, {
-    key: 'setupServerEvents',
-    value: function setupServerEvents() {
-      this.serverConnections = {};
-      this.nextConnectionId = 0;
-      var self = this;
-      this.server.on('connection', function ConnectionEvent(connection) {
 
-        self.nextConnectionId++;
-        var id = self.nextConnectionId;
-        self.serverConnections[id] = connection;
-
-        connection.on('close', function CloseEvent() {
-          delete self.serverConnections[id];
-        });
-      });
+  connect() {
+    log.info('starting server','__LOCATION__');
+    var app = this.expressApp();
+    this.server = http.createServer(app);
+    this.setupServerEvents();
+    this.setupRoutes(app);
+    this.server.on('error', function httpServerError(err) {
+      log.error(err,'__LOCATION__');
+      process.exit(1);
+    });
+    if (this.options.host === '*') {
+      this.server.listen(this.options.port);
+    } else {
+      this.server.listen(this.options.port, this.options.host);
     }
-  }, {
-    key: 'setupRoutes',
-    value: function setupRoutes(app) {
-      app.use('/', function ApiRequestRoute(req, res, next) {
-        log.info({ path: req.path, body: JSON.stringify(req.body) }, './service.js:90');
-        next();
-      });
+  }
 
-      app.use(function NotFoundRoute(req, res) {
-        log.info({ code: 404, path: req.path, body: JSON.stringify(req.body) }, './service.js:95');
-        res.status(404);
-        res.json({ message: 'not found' });
-      });
+  reconnect() {
+    var self = this;
+    this.disconnect(function reconnectCallback() {
+      self.connect();
+    });
+  }
+
+  disconnect(callback) {
+    try {
+      this.server.close(callback);
+    } catch (e) {
+      log.error(e,'__LOCATION__');
     }
-  }, {
-    key: 'expressApp',
-    value: function expressApp() {
-      var app = express(),
-          adminRoute = express.Router();
-      var routes = new ExpressRoutes();
-      app.disable('x-powered-by');
-      app.enable('trust proxy');
+    _.forEach(this.serverConnections, function closeConnection(connection) {
+      connection.destroy();
+    });
+  }
 
-      var serviceRouteCtx = function serviceRouteCtx(route) {
-        return function ServiceRoute(req, res) {
-          route(req, res);
-        };
+  setupServerEvents() {
+    this.serverConnections = {};
+    this.nextConnectionId = 0;
+    var self = this;
+    this.server.on('connection', function ConnectionEvent(connection) {
+
+      self.nextConnectionId++;
+      var id = self.nextConnectionId;
+      self.serverConnections[id] = connection;
+
+      connection.on('close', function CloseEvent() {
+        delete self.serverConnections[id];
+      });
+    });
+  }
+
+  setupRoutes(app) {
+    app.use('/', function ApiRequestRoute(req, res, next) {
+      log.info({path: req.path, body: JSON.stringify(req.body)},'__LOCATION__');
+      next();
+    });
+
+    app.use(function NotFoundRoute(req, res) {
+      log.info({code: 404, path: req.path, body: JSON.stringify(req.body)},'__LOCATION__');
+      res.status(404);
+      res.json({'message': 'not found'});
+    });
+  }
+
+  expressApp() {
+    var app = express(),
+      adminRoute = express.Router();
+    var routes = new ExpressRoutes();
+    app.disable('x-powered-by');
+    app.enable('trust proxy');
+
+    var serviceRouteCtx = function (route) {
+      return function ServiceRoute(req, res) {
+        route(req, res);
       };
+    };
 
-      _.keys(routes.routeDetails()).forEach(function registerServiceRoute(route) {
-        adminRoute.route('/' + route).get(serviceRouteCtx(routes[route].bind(routes)));
-      });
+    _.keys(routes.routeDetails()).forEach(function registerServiceRoute(route) {
+      adminRoute.route('/' + route).get(serviceRouteCtx(routes[route].bind(routes)));
+    });
 
-      app.use('/_/', adminRoute);
-      return app;
-    }
-  }, {
-    key: 'end',
-    value: function end() {
-      this.disconnect();
-    }
-  }]);
+    app.use('/_/', adminRoute);
+    return app;
+  }
 
-  return Service;
-})();
-
+  end() {
+    this.disconnect();
+  }
+}
 exports.Service = Service;

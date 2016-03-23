@@ -1,3 +1,4 @@
+'use strict';
 var should = require('should'),
   session = require('../src/service.js');
 
