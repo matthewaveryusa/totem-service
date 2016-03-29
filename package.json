@@ -24,7 +24,9 @@
     "express": "*",
     "lodash": "*",
     "totem-tools": "*",
-    "totem-log": "*"
+    "cors": "*",
+    "totem-log": "*",
+    "totem-tools": "*"
   },
   "devDependencies": {
     "should": "*"
