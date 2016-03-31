@@ -28,7 +28,7 @@ class Service {
 
 
   connect() {
-    log.info('starting server','__LOCATION__');
+    log.info('starting server', ('totem-service/src/service.js:31' || '__LOCATION__'));
     var app = this.expressApp();
     this.server = http.createServer(app);
     this.setupServerEvents(app);
@@ -45,20 +45,12 @@ class Service {
     //this is the final handler that prints metrics
     app.use(function (req, res) {
       var time = Date.now() - req.start;
-      log.metric({'time':time, 'status':res.statusCode, 'method': req.method, 'url': req.originalUrl, 'ip': req.ip, 'referer': req.referer},  '__LOCATION__');
+      log.metric({'time':time, 'status':res.statusCode, 'method': req.method, 'url': req.originalUrl, 'ip': req.ip, 'referer': req.referer},  ('totem-service/src/service.js:48' || '__LOCATION__'));
     });
-
-    //this is the final handler when all else fails
-    app.use(function (err, req, res, next) {
-        console.log(err);
-        log.error({'error':err,'stack':err.stack},'__LOCATION__');
-        res.status(500).json({'errorCode': 'internalError'});
-    });
-
     
 
     this.server.on('error', function httpServerError(err) {
-      log.error(err,'__LOCATION__');
+      log.error({'error':err, 'stack':err.stack},('totem-service/src/service.js:53' || '__LOCATION__'));
       process.exit(1);
     });
     if (this.options.host === '*') {
@@ -79,7 +71,7 @@ class Service {
     try {
       this.server.close(callback);
     } catch (e) {
-      log.error(e,'__LOCATION__');
+      log.error(e,('totem-service/src/service.js:74' || '__LOCATION__'));
     }
     _.forEach(this.serverConnections, function closeConnection(connection) {
       connection.destroy();
@@ -132,17 +124,18 @@ class Service {
     });
 
     app.use(function (err, req, res, next) {
-      if (err instanceof SyntaxError) {
+      if(_.isPlainObject(err) && 'status' in err && 'errorCode' in err) {
+        res.status(err.status).json(_.pick(err,['errorCode','clientDetails']));
+        if('serverDetails' in err) {
+          log.error({'err':err},('totem-service/src/service.js:130' || '__LOCATION__'));
+        }
+        next();
+      } else if (err instanceof SyntaxError) {
         res.status(400).json({'errorCode': 'invalidJSON'});
         next();
-      } else if (err instanceof tools.ClientError) {
-        res.status(err.status).json({'errorCode': err.errorCode});
-        next();
-      } else if (err instanceof tools.InputError) {
-        res.status(err.status).json({'errorCode': err.errorCode, 'details': err.details});
-        next();
       } else {
-        next(err);
+        log.error({'error':err,'stack':err.stack},('totem-service/src/service.js:137' || '__LOCATION__'));
+        res.status(500).json({'errorCode': 'internalError'});
       }
     });
   }

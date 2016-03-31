@@ -118,4 +118,3 @@ class ExpressRoutes {
 }
 
 exports.ExpressRoutes = ExpressRoutes;
-
