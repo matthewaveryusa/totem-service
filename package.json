@@ -1,6 +1,6 @@
 {
   "name": "totem-service",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Totem core service functionality with default behaviors. All services should inherit from this service",
   "main": "./src/service.js",
   "scripts": {

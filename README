@@ -1,6 +1,0 @@
-#test
-npm prune
-npm install
-npm test
-#deploy
-reggie -u http://totemdev:5010/ publish

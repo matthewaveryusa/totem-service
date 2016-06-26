@@ -6,7 +6,8 @@ const _ = require('lodash'),
   http = require('http'),
   log = require('totem-log'),
   tools = require('totem-tools'),
-  cors = require('cors');
+  cors = require('cors'),
+  redis = require('redis');
 
 
 /**
@@ -24,11 +25,15 @@ class Service {
         },
         self.sigtermTimeout || 0);
     });
+    this.redis = redis.createClient(options.redis.port, options.redis.host);
+    this.redis.on('error', function (err) {
+      log.error(err,('totem-service/src/service.js:30' || '__LOCATION__'));
+    });
   }
 
 
   connect() {
-    log.info('starting server', ('totem-service/src/service.js:31' || '__LOCATION__'));
+    log.info('starting server', ('totem-service/src/service.js:36' || '__LOCATION__'));
     var app = this.expressApp();
     this.server = http.createServer(app);
     this.setupServerEvents(app);
@@ -45,12 +50,12 @@ class Service {
     //this is the final handler that prints metrics
     app.use(function (req, res) {
       var time = Date.now() - req.start;
-      log.metric({'time':time, 'status':res.statusCode, 'method': req.method, 'url': req.originalUrl, 'ip': req.ip, 'referer': req.referer},  ('totem-service/src/service.js:48' || '__LOCATION__'));
+      log.metric({'time':time, 'status':res.statusCode, 'method': req.method, 'url': req.originalUrl, 'ip': req.ip, 'referer': req.referer},  ('totem-service/src/service.js:53' || '__LOCATION__'));
     });
     
 
     this.server.on('error', function httpServerError(err) {
-      log.error({'error':err, 'stack':err.stack},('totem-service/src/service.js:53' || '__LOCATION__'));
+      log.error({'error':err, 'stack':err.stack},('totem-service/src/service.js:58' || '__LOCATION__'));
       process.exit(1);
     });
     if (this.options.host === '*') {
@@ -71,7 +76,7 @@ class Service {
     try {
       this.server.close(callback);
     } catch (e) {
-      log.error(e,('totem-service/src/service.js:74' || '__LOCATION__'));
+      log.error(e,('totem-service/src/service.js:79' || '__LOCATION__'));
     }
     _.forEach(this.serverConnections, function closeConnection(connection) {
       connection.destroy();
@@ -95,6 +100,7 @@ class Service {
   }
 
   setupPreRoutes(app) {
+    var self = this;
     app.use(cors());
     //if req.identity exists, it means this request is from a logged-in user.
     app.use(function (req, res, next) {
@@ -127,20 +133,21 @@ class Service {
       if(_.isPlainObject(err) && 'status' in err && 'errorCode' in err) {
         res.status(err.status).json(_.pick(err,['errorCode','clientDetails']));
         if('serverDetails' in err) {
-          log.error({'err':err},('totem-service/src/service.js:130' || '__LOCATION__'));
+          log.error({'err':err},('totem-service/src/service.js:136' || '__LOCATION__'));
         }
         next();
       } else if (err instanceof SyntaxError) {
         res.status(400).json({'errorCode': 'invalidJSON'});
         next();
       } else {
-        log.error({'error':err,'stack':err.stack},('totem-service/src/service.js:137' || '__LOCATION__'));
+        log.error({'error':err,'stack':err.stack},('totem-service/src/service.js:143' || '__LOCATION__'));
         res.status(500).json({'errorCode': 'internalError'});
       }
     });
   }
 
   expressApp() {
+    var self = this;
     var app = express(),
       adminRoute = express.Router();
     var routes = new ExpressRoutes();
