@@ -112,10 +112,11 @@ class Service {
         if (err) {
           return next(err);
         }
-        req.identity = {'userId': data.userId};
+        req.identity = {'userId': Number(data.userId), 'username': data.username,'session': sessionId};
         next();
       });
     });
+
   }
 
   setupRoutes(app) {
@@ -133,14 +134,14 @@ class Service {
       if(_.isPlainObject(err) && 'status' in err && 'errorCode' in err) {
         res.status(err.status).json(_.pick(err,['errorCode','clientDetails']));
         if('serverDetails' in err) {
-          log.error({'err':err},('totem-service/src/service.js:136' || '__LOCATION__'));
+          log.error({'err':err},('totem-service/src/service.js:137' || '__LOCATION__'));
         }
         next();
       } else if (err instanceof SyntaxError) {
         res.status(400).json({'errorCode': 'invalidJSON'});
         next();
       } else {
-        log.error({'error':err,'stack':err.stack},('totem-service/src/service.js:143' || '__LOCATION__'));
+        log.error({'error':err,'stack':err.stack},('totem-service/src/service.js:144' || '__LOCATION__'));
         res.status(500).json({'errorCode': 'internalError'});
       }
     });
@@ -165,21 +166,6 @@ class Service {
     });
 
     app.use('/_/', adminRoute);
-
-    //if req.identity exists, it means this request is from a logged-in user.
-    app.use(function (req, res, next) {
-      var sessionId = req.headers['x-totem-session-id'];
-      if (!sessionId) {
-        return next();
-      }
-      tools.sessionExists(self.redis, sessionId, function (err, data) {
-        if (err) {
-          return next(err);
-        }
-        req.identity = {'userId': Number(data.userId), 'username': data.username,'session': sessionId};
-        next();
-      });
-    });
 
     return app;
   }
